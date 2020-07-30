@@ -6,7 +6,7 @@ function validateAction(action){
     }
 }
 
-export function createStore(reducer){
+export function createStore(reducer,middleware){
     let state;
     let subscribers=[];
     let core_dispatch = function(action){
@@ -14,9 +14,10 @@ export function createStore(reducer){
         state = reducer(state,action);
         subscribers.forEach(cb=> cb());
     }
+    const getState = () => state;
 
     const store = {
-        getState : () => state,
+        getState,
         dispatch : core_dispatch,
         subscribe : (cb)=>{
             if(typeof cb === 'function'){
@@ -30,14 +31,53 @@ export function createStore(reducer){
             }
         }
     }
-    store.dispatch({type :'INIT STORE'});
+    if(middleware){
+        const dispatch = (action) => core_dispatch(action);
+        var ff1 = middleware({
+            dispatch,
+            getState
+        });
+        store.dispatch = ff1(core_dispatch);
+
+        // store.dispatch = middleware({
+        //         dispatch,
+        //         getState
+        //     })(core_dispatch);
+    }
+    core_dispatch({type :'INIT STORE'});
     return store;
 }
 
+export const applyMiddleware = (...middlewares) => {
+    console.log("applyMiddleware before store vala func");
+    return function(store){
+        console.log("applyMiddleware inside store vala func", store);
+        if(!middlewares.length){
+            console.log("applyMiddleware single length");
+            return dispatch => dispatch;
+        }else if(middlewares.length === 1){
+            return middlewares[0](store);
+        }else{
+            const boundedMiddlewares = middlewares.map((el)=>{
+                return el(store);
+            });
+            return boundedMiddlewares.reduce((a,b)=>{
+                return next => a(b(next));
+            })
+        }
+    }
+}
 
 
-// const store = createStore(noteReducer);
-// store.dispatch(CREATE_NOTE);
+// export const applyMiddleware = (...middlewares) => store =>{
+//      Here write logic.
+//      if(!middlewares.length){
+//     console.log("applyMiddleware single length");
+//     return dispatch => dispatch;
+// }else if(middlewares.length === 1){
+//     return middlewares[0](store);
+// }
+// }
 
 
 

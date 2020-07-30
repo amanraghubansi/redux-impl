@@ -90,9 +90,12 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = dispatch => ({
-    onAddNote: () => dispatch({
-        type: CREATE_NOTE
-    }),
+    onAddNote: () => {
+        
+        return dispatch({
+            type: CREATE_NOTE
+        });
+    },
     onChangeNote: (id, content) => dispatch({
         type: UPDATE_NOTE,
         id,
